@@ -10,6 +10,7 @@ public class StringCalc {
 	private static final String defDelim = ",";
 	private static final String delimToken = "//";
 	private static final String negException = "Negatives not allowed: ";
+	private static final String delimException = "2 tokens next to each other.";
 	private static final Logger logger = LogManager.getLogger(StringCalc.class);
 
 	public static void main(String[] args) {
@@ -50,6 +51,8 @@ public class StringCalc {
 			//ignore not correctly opened elements, make sure to escape entire expression
 			if (t.startsWith("[")) {
 				delimiters.add("\\Q" + t.substring(1) + "\\E");
+			} else {
+				delimiters.add("\\Q" + t + "\\E");
 			}
 		}
 		
@@ -58,7 +61,7 @@ public class StringCalc {
 		return String.join("|", delimiters);
 	}
 	
-	private static ArrayList<Integer> parseNumbers(String input) {
+	private static ArrayList<Integer> parseNumbers(String input) throws Exception {
 		String[] lines = null;
 		String delim = defDelim;
 		lines = input.split(System.lineSeparator());
@@ -69,6 +72,11 @@ public class StringCalc {
 			if (line.startsWith(delimToken)) {
 				delim = parseDelim(lines[0].substring(delimToken.length()));
 			} else {
+				//If starts or ends with a token -> 2 tokens next to each other, not correct
+				if (line.matches("^("+delim+").*") || line.matches(".*("+delim+")$")) {
+					logger.error("2 tokens next to each other.");
+					throw new Exception(delimException);
+				}
 				for (String token : line.split(delim)) {
 					try {
 						numbers.add(Integer.parseInt(token));
